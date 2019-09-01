@@ -1,2 +1,29 @@
-First commit text
-Second commit test
+This is a todo 
+(this will have a high level overview, but can be elaborated upon)
+
+1. create a python script or library that can simulate a powertrain. 
+	* Ideally this would allow 
+		a. battery parameters
+			i. the number of batteries in series and parallel, 
+			ii. the max current (continuous and pulse?), 
+			iii. min current
+		b. motor controller parameters
+		c. motor parameters 
+	* Estimate contactor, MSD, Loss, etc.
+	* Ideally this would take some maximum value of torque (a theoretical value, or some maximum that could be obtained from research. Any more torque would be pointless because it would be straight loss), and work backwards.
+	* Ideally, this max power would be limitted by MC or motor. Not particularly relevent. It would depend on the overall weight and combination.
+2. Add the ability to optimize for a track (another wrapper script?...)
+	* This would need some way to categorize the risk to prevent it from being 1000 batteries in series and 1 in parallel = 4200 volts max and 50 amps. This is an unfeasably high voltage. 
+	a. Use the max power to scale the max power. 
+	b. Determine the average power 
+	c. Use the expected distance
+		* Can we get around the problem of desgning for a single specific track?
+		* (I'd recommend checking all of these) 
+		i. NJMP = 2.2 miles (Thunderbolt Raceway)
+		ii. Barber = 2.38 miles
+		iii. Summit Point (WV) = 2 miles (Summit Point Circuit)
+	d. create an expected energy consumption over the entire race 
+		* This could be used if a small segment of batteries could be added or lost to make the race viable
+2. create a wrapper script for the above python script
+	a. This wrapper script can simulate multiple powertrains
+	b. This script uses the simulated powertrains 
