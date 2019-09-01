@@ -1,4 +1,8 @@
+venv/*
+.idea/*
 
+#above ignores everything in the venv folder and the .idea folder
+#everything below is redundant. 
 # Created by https://www.gitignore.io/api/pycharm
 # Edit at https://www.gitignore.io/?templates=pycharm
 
