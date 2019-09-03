@@ -2,15 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-MPHoRPM = 0.019337455
-MPSoRPM = 0.008644633
+MPHoRPM = 0.019337455  # MPH/RPM
+MPSoRPM = 0.008644633  # meters/s/RPM
 GearRatio = 4
 
 CurrentMotor = 120000
 NewMotor = 120000
 tolerance = 10
 
-laps = input("Number of laps: ") # this can be included in csv file in the future if we find that easier
+laps = input("Number of laps: ")  # this can be included in csv file in the future if we find that easier
 
 file_name = r'\NJMP6_first4lapstwice.csv'
 file_path = r'C:\Users\sesch\Desktop\BOLT\Converted'
@@ -24,10 +24,10 @@ speed = np.empty(2)
 print(len(data['time']))
 
 for i in range(0, len(data['time']-1)):
-    speed = np.append(data['motorRPM'][i]/4, axis=0)[i] # add bike speed to array for every time instance
+    speed = np.append(data['motorRPM'][i]/4, axis=0)[i]  # add bike speed to array for every time instance
 print(len(speed))
 print(speed)
-data['speed'] = speed # add new column to dataframe
+data['speed'] = speed  # add new column to dataframe
 """
 time_offset = []
 for t in range(0, len(data)):
