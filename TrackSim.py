@@ -22,11 +22,20 @@ data = pd.read_csv(location, names=['time', 'throttle', 'motorRPM', '4', '5', '6
 data_df = pd.DataFrame(data)
 
 speed = np.ones(len(data_df['time']), np.float64)
+distance = np.ones(len(data_df['time']), np.float64)
 
-for i in range(1, len(data_df['time'])):                           # add bike speed to array for every time instance
+for i in range(0, len(data_df['time'])):                           # add bike speed to array for every time instance
     speed.put([i], data_df['motorRPM'][i] / 4 / 60 * WheelD * pi)  # speed in meters per second
 data_df['speed'] = speed  # add new column to DataFrame
-print(data_df)
+
+for i in range(0, len(data_df['time'])):
+    if i == 0:
+        distance.put([0], data_df['speed'][0] * data_df['time'][0] - 1)
+    else:
+        distance.put([i], data_df['speed'][i] * (data_df['time'][i] - data_df['time'][i-1]))
+totalDistance = np.sum(distance, axis=0)  # total distance traveled on time interval in meters
+print('total distance over given time interval: {}'.format(totalDistance))
+print('DataFrame: {}'.format(data_df))
 
 
 """
