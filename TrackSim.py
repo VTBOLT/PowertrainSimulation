@@ -21,22 +21,37 @@ location = file_path + file_name
 data = pd.read_csv(location, names=['time', 'throttle', 'motorRPM', '4', '5', '6'], header=0, low_memory=False)
 data_df = pd.DataFrame(data)
 
-speed = np.ones(len(data_df['time']), np.float64)
-distance = np.ones(len(data_df['time']), np.float64)
+# find race start time - needs to be more accurate
+start_time = 0
+for i in range(0, len(data['4'])):
+    if data['5'][i] >= 10:
+        start_time = i
+        break
 
-for i in range(0, len(data_df['time'])):                           # add bike speed to array for every time instance
-    speed.put([i], data_df['motorRPM'][i] / 4 / 60 * WheelD * pi)  # speed in meters per second
-data_df['speed'] = speed  # add new column to DataFrame
+# add indexes to drop
+drop = np.ones(start_time, np.int8)
+for i in range(0, start_time):
+    drop.put([i], i)  # builds array for removing non-race data from data frame
+print(drop)
+for i in range(0, len(drop)):
+    data_trimmed = data_df.take(data_df.index[drop])  # removes non-race data
 
-for i in range(0, len(data_df['time'])):
+
+speed = np.ones(len(data_trimmed['time']), np.float64)
+distance = np.ones(len(data_trimmed['time']), np.float64)
+
+for i in range(0, len(data_trimmed['time'])):                           # add bike speed to array for every time instance
+    speed.put([i], data_trimmed['motorRPM'][i] / 4 / 60 * WheelD * pi)  # speed in meters per second
+data_trimmed['speed'] = speed  # add new column to data frame
+
+for i in range(0, len(data_trimmed['time'])):
     if i == 0:
-        distance.put([0], data_df['speed'][0] * data_df['time'][0] - 1)
+        distance.put([0], data_trimmed['speed'][0] * data_trimmed['time'][0] - 1)
     else:
-        distance.put([i], data_df['speed'][i] * (data_df['time'][i] - data_df['time'][i-1]))
+        distance.put([i], data_trimmed['speed'][i] * (data_trimmed['time'][i] - data_trimmed['time'][i-1]))
 totalDistance = np.sum(distance, axis=0)  # total distance traveled on time interval in meters
 print('total distance over given time interval: {}'.format(totalDistance))
-print('DataFrame: {}'.format(data_df))
-
+print('All data: {}'.format(data_trimmed))
 
 """
 time_offset = []
