@@ -36,8 +36,8 @@ data_trimmed = data_trimmed.dropna()
 # initialize arrays for new speed and distance data
 distance = np.ones(len(data_trimmed['time']), np.float64)
 speed = np.ones(len(data_trimmed['time']), np.float64)
-acceleration = np.ones(len(data_trimmed['time']), np.float64)
-accel_binary = np.ones(len(data_trimmed['time']), np.float64)
+acceleration = np.ones(len(data_trimmed['time']))
+accel_binary = np.ones(len(data_trimmed['time']))
 
 # calculate 'instantaneous' speed
 for i in range(start_time):
@@ -66,11 +66,27 @@ for i in range(0, len(data_trimmed['time'])):
             accel_binary.put([i], 0)
 data_trimmed['accel binary'] = accel_binary  # add binary acceleration column to data frame
 
+# binary acceleration (and normal accel) graph is very jittery - this should smooth it out
+kernel_size = 2
+accel_smooth = np.ones(kernel_size)
+for accel in range(0, len(data_trimmed['time'])-kernel_size, kernel_size-1):
+    if data_trimmed['accel binary'][accel+kernel_size-1] is not None:
+        for i in range(0, kernel_size-1):
+            accel_smooth.put([i], data_trimmed['accel binary'][accel+i])
+        smoothed = np.mean(accel_smooth)
+        if smoothed >= 0.5:
+            smoothed = 1
+        else:
+            smoothed = 0
+        for smooth in range(0, kernel_size-1):
+            data_trimmed['accel binary'][accel+smooth] = smoothed
+
+
 print('total distance over given time interval: {}'.format(distance[len(distance)-1]))
 print('All data:')
 print('{}'.format(data_trimmed))
 
-plt.plot(data_trimmed['time'], data_trimmed['acceleration'])
+plt.plot(data_trimmed['time'], data_trimmed['accel binary'])
 
 plt.ylabel('Accel')
 plt.xlabel('Time')
