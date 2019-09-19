@@ -4,6 +4,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import sys
+import os
 from math import pi
 
 
@@ -30,11 +32,7 @@ CurrentMotor = 120000
 NewMotor = 120000
 tolerance = 10
 
-# laps = input("Number of laps: ")  # this can be included in csv file in the future if we find that easier
-
-file_name = r'\BOLT3Data.csv'
-file_path = r'C:\Users\sesch\Desktop\BOLT\Converted'
-location = file_path + file_name
+location = os.path.abspath('BOLT3Data.csv')  # csv file trimmed for data from when the bike is racing
 
 # create DataFrame
 data = pd.read_csv(location, names=['time', 'throttle', 'motorRPM'], header=0, low_memory=False)
@@ -109,5 +107,3 @@ plt.plot(data_timeDist['time start'], data_timeDist['final speed'])
 plt.ylabel('final speed')
 plt.xlabel('time start')
 plt.show()
-
-# still need intervals for acceleration vs braking so we know over what distance to scale the torque
