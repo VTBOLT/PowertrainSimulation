@@ -32,7 +32,7 @@ tolerance = 10
 
 # laps = input("Number of laps: ")  # this can be included in csv file in the future if we find that easier
 
-file_name = r'\RUN4ThrottleRPM4.csv'
+file_name = r'\BOLT3Data.csv'
 file_path = r'C:\Users\sesch\Desktop\BOLT\Converted'
 location = file_path + file_name
 
