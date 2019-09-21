@@ -16,7 +16,7 @@ def main():
     GearRatio = 4
     WheelR = 0.3302  # Wheel diameter in nanometers
     BikeM = 200  # mass input from optimization program in kgs
-    max_torque = 10  # max torque of bike motor
+    max_torque = 100  # max torque of bike motor in N*m
 
     location = os.path.abspath('CSVFiles\\EditedBOLT3Data.csv')  # csv file trimmed to only when the bike is racing
 
@@ -30,7 +30,7 @@ def main():
     # f = m * a
     # torque_shaft * 4 / r / m = a
 
-    max_accel = max_torque * GearRatio / WheelR / BikeM
+    max_accel = max_torque * GearRatio / WheelR / BikeM  # Some scaling factors definitely need to be added to this
     powertrain_ID = 1  # some input from Kristen's program to organize different powertrains?
 
     segment_times = np.zeros((len(data_df['time start'])))
