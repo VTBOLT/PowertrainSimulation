@@ -18,7 +18,7 @@ def main():
     BikeM = 200  # mass input from optimization program in kgs
     max_torque = 10  # max torque of bike motor
 
-    location = os.path.abspath('CSVFiles\\BOLT3Data.csv')  # csv file trimmed to only when the bike is racing
+    location = os.path.abspath('CSVFiles\\EditedBOLT3Data.csv')  # csv file trimmed to only when the bike is racing
 
     # create DataFrame
     data = pd.read_csv(location, names=['time start', 'high low', 'distances', 'final speed'], header=0, low_memory=False)
@@ -33,11 +33,11 @@ def main():
     max_accel = max_torque * GearRatio / WheelR / BikeM
     powertrain_ID = 1  # some input from Kristen's program to organize different powertrains?
 
-    segment_times = np.zeros(int((len(data_df['time start'])/2)))
+    segment_times = np.zeros((len(data_df['time start'])))
 
     for i in range(0, len(data_df['time start'])):
         if i % 2 is 1:  # segments bike is braking
-            time = (2 * data_df['distances'[i]]) / (data_df['final speed'][i] - data_df['final speed'][i - 1])
+            time = (2 * data_df['distances'][i]) / (data_df['final speed'][i] + data_df['final speed'][i - 1])
             segment_times.put([i], time)
         else:  # segments bike is accelerating
             if i is 0:
@@ -45,7 +45,7 @@ def main():
                 time = math.sqrt(det) / max_accel
                 segment_times.put([i], time)
             else:
-                det = pow(data_df['final speed'][i - 1], 2) + 2 * max_accel * data_df['distances']
+                det = pow(data_df['final speed'][i - 1], 2) + 2 * max_accel * data_df['distances'][i]
                 time = (math.sqrt(det) - data_df['final speed'][i - 1]) / max_accel
                 segment_times.put([i], time)
 
