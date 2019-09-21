@@ -1,4 +1,4 @@
-# run this program once to calculate a data table of scalable throttle values versus distance on the track
+# run this program once to calculate a data table of binary throttle values and the distance each throttle value is held
 
 
 import numpy as np
@@ -10,10 +10,10 @@ from math import pi
 
 
 def get_distance(start, end):
-    for n in range(0, end - start):  # calculate the distance that throttle is held high
-        thisDistance = data_df['speed'][start + n] * (data_df['time'][start + n] - data_df['time'][
-            start + n - 1])  # calculate distance for one time interval
-        distance.put([n], thisDistance)  # add distance from a single time interval to distance array for this throttle
+    distance = np.zeros(end-start)
+    for n in range(start, end):  # calculate the distance that throttle is held high
+        thisDistance = data_df['speed'][n] * (data_df['time'][n] - data_df['time'][n - 1])  # calculate distance for one time interval
+        distance.put([n-start], thisDistance)  # add distance from a single time interval to distance array for this throttle
     total_dist = np.sum(distance)
     return total_dist
 
@@ -41,7 +41,6 @@ data_timeDist = pd.DataFrame(columns=['time start', 'high low', 'distances', 'fi
 
 # initialize arrays for new speed and distance data
 speed = np.ones(len(data_df['time']))
-distance = np.ones(len(data_df['time']))
 torque_scaling = np.ones(len(data_df['time']))
 
 max_throttle = data_df['throttle'].max()
@@ -69,7 +68,7 @@ prevThrottle = False
 for all_i in range(0, len(data_df['time'])):
     if torque_scaling[all_i] >= 0.5 and not prevThrottle:  # if throttle went high
         prevThrottle = True
-        high_low.put([data_timeDist_counter], 2)  # throttle went high
+        high_low.put([data_timeDist_counter], 1)  # throttle went high - treating as max acceleration
         time_start.put([data_timeDist_counter], data_df['time'][all_i])
 
         if prevThrottleDown is True:  # find distance for previous low throttle and add to previous row
@@ -82,7 +81,7 @@ for all_i in range(0, len(data_df['time'])):
     if torque_scaling[all_i] <= 0.5 and prevThrottle:  # if throttle went low
         prevThrottleDown = True
         prevThrottle = False
-        high_low.put([data_timeDist_counter], 0)  # throttle went low
+        high_low.put([data_timeDist_counter], 0)  # throttle went low - treating as brake
         time_start.put([data_timeDist_counter], data_df['time'][all_i])
 
         total_distance = get_distance(time_start_i, all_i)  # find distance for high throttle and add to previous row
@@ -97,7 +96,9 @@ data_timeDist['distances'] = distances
 data_timeDist['final speed'] = finalSpeedSeg
 
 df_toRemove = data_timeDist[data_timeDist['time start'] == 1]
-data_timeDist = data_timeDist.drop(df_toRemove.index, axis=0)  # drop unnecessary
+data_timeDist = data_timeDist.drop(df_toRemove.index, axis=0)  # drop extra rows left over from original dataframe size
+
+data_timeDist.to_csv(os.path.abspath('EditedBOLT3Data.csv'), index=None, header=True)
 
 print('All data:')
 print('{}'.format(data_timeDist))
