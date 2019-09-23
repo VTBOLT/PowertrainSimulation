@@ -5,24 +5,35 @@ will not be able to run by itself.
 """
 
 
-def main():
+def main(data_frame, max_torque, max_rpm_of_max_torque, max_rpm, mass, pack_capacity_kWh, data_stripper):
     import numpy as np
     import pandas as pd
     import math
     import os
+
+    #input data stripper variable to speed up program if desired
 
     # minimum inputs to calculate accel (I think): motor max torque and total bike mass
 
     GearRatio = 4
     WheelR = 0.3302  # Wheel diameter in nanometers
     BikeM = 200  # mass input from optimization program in kgs
-    max_torque = 100  # max torque of bike motor in N*m
+    max_torque = 240  # max torque of bike motor in N*m
 
     location = os.path.abspath('CSVFiles\\EditedBOLT3Data.csv')  # csv file trimmed to only when the bike is racing
 
     # create DataFrame
     data = pd.read_csv(location, names=['time start', 'high low', 'distances', 'final speed'], header=0, low_memory=False)
     data_df = pd.DataFrame(data)
+
+    # torque curve
+    # input max rpm, power, and max torque
+    # make torque curve
+    # Make list of RPMs at each moment in time for each segment.
+    # Make equation for acceleration.
+    # Find velocity at each time point.
+    # Calculate distance traveled.
+    # If traveled enough distance, break.
 
     # torque = torque wheel = torque shaft * 4
     # f*r = torque
