@@ -6,6 +6,7 @@ will not be able to run by itself.
 
 
 def main(data_frame, max_torque, max_rpm_of_max_torque, max_rpm, mass, pack_capacity_kWh, data_stripper):
+
     import numpy as np
     import pandas as pd
     import math
@@ -63,6 +64,6 @@ def main(data_frame, max_torque, max_rpm_of_max_torque, max_rpm, mass, pack_capa
     total_time = np.sum(segment_times)
 
     print("Total time for powertrain {} is {}".format(powertrain_ID, total_time))
-
+    return total_time
 
 main()

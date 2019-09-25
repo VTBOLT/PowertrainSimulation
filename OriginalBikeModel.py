@@ -106,6 +106,6 @@ def main():
     plt.ylabel('final speed')
     plt.xlabel('time start')
     plt.show()
-
+    return data_timeDist
 
 main()
