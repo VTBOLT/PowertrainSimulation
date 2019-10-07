@@ -10,9 +10,7 @@ import os
 
 
 def main():
-    print("start")
     # Create csv for all components with their specs then add to abspath line.
-    # Filter out masses and combine from all components into a new spec.
     # Create data frame with every possible combination of specs.
     # Call OriginalBikeModel.py to get data from bolt 3
     # Call PowertrainSimulation.py with inputs as bolt 3 data frame and data in a row from
@@ -97,7 +95,9 @@ def main():
 
     times = np.zeros(specs_df.shape[0])
 
-    data_stripper = input("input a data stripper value (higher is lower time and more data cut): ")
+    inputStrip = input("Enter a value for data stripper > 0 or type 'n' to use default")
+    if inputStrip != 'n':
+        data_stripper = inputStrip
 
     for i in range(0, specs_df.shape[0]):
         times[i] = psim.main(bolt3_df, specs_df.iloc[i], data_stripper, i)  # call PowertrainSimulation.py

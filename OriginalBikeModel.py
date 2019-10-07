@@ -15,7 +15,7 @@ def main():
     def get_distance(start, end):
         distance = np.zeros(end-start)
         for n in range(start, end):  # calculate the distance that throttle is held high
-            thisDistance = data_df['speed'][n] * (data_df.shape[0][n] - data_df.shape[0][n - 1])  # calculate distance for one time interval
+            thisDistance = data_df['speed'][n] * (data_df.iloc[n, 0] - data_df.iloc[n-1, 0])  # calculate distance for one time interval
             distance.put([n-start], thisDistance)  # add distance from a single time interval to distance array for this throttle
         total_dist = np.sum(distance)
         return total_dist
@@ -24,6 +24,7 @@ def main():
         dists.put([data_timeDist_counter - 1], total_distance)  # total distance over segment
         final_speed.put([data_timeDist_counter - 1], data_df['speed'][all_i])  # speed at end of segment
 
+    # BOLT3 Ratio and wheel diameter
     GearRatio = 4
     WheelD = 0.6604  # Wheel diameter in meters
 
@@ -64,7 +65,7 @@ def main():
         if torque_scaling[all_i] >= 0.5 and not prevThrottle:  # if throttle went high
             prevThrottle = True
             high_low.put([data_timeDist_counter], 1)  # throttle went high - treating as max acceleration
-            time_start.put([data_timeDist_counter], data_df.iloc[0][all_i])
+            time_start.put([data_timeDist_counter], data_df.iloc[all_i, 0])
 
             if prevThrottleDown is True:  # find distance for previous low throttle and add to previous row
                 total_distance = get_distance(time_start_i, all_i)
@@ -77,7 +78,7 @@ def main():
             prevThrottleDown = True
             prevThrottle = False
             high_low.put([data_timeDist_counter], 0)  # throttle went low - treating as brake
-            time_start.put([data_timeDist_counter], data_df.iloc[0][all_i])
+            time_start.put([data_timeDist_counter], data_df.iloc[all_i, 0])
 
             # find distance for high throttle and add to previous row
             total_distance = get_distance(time_start_i, all_i)
@@ -97,9 +98,6 @@ def main():
 
     data_timeDist.to_csv(os.path.abspath('OriginalBikeModelFiles\\EditedBOLT3Data.csv'), index=None, header=True)
 
-    print('All data:')
-    print('{}'.format(data_timeDist))
-
     plt.plot(data_timeDist['time start'], data_timeDist['final speed'])
 
     plt.ylabel('final speed')
@@ -107,4 +105,6 @@ def main():
     plt.show()
     return data_timeDist
 
-main()
+
+if __name__ == '__main__':
+    main()
