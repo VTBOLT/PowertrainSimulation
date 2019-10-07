@@ -11,6 +11,7 @@ import os
 import matplotlib.pyplot as plt
 import OriginalBikeModel as obike
 
+
 # add motor/motor controller compatibility check?
 
 # def main(data_df, max_torque, max_rpm_max_torque, min_torque, rpm_min_torque, motor_mass, mc_mass, pack_cap_kwh,
@@ -18,13 +19,27 @@ import OriginalBikeModel as obike
 
 
 def main():
+
+    def get_accel(current_speed):
+        # calculate RPM from speed
+        current_RPM = current_speed / (wheel_r * 2 * math.pi) * 60
+
+        # find accel for that RPM
+        if current_RPM < max_rpm_max_torque / (increment * data_stripper):
+            # Flat slope for torque curve
+            accel = max_a
+        else:
+            # Slope of torque curve
+            accel = (torque_slope * current_RPM + torque_b) * t_to_a
+        return accel
+
     max_torque = 200
     max_rpm_max_torque = 3000
     min_torque = 20
     rpm_min_torque = 6000
     motor_mass = 20
     mc_mass = 10.7
-    data_stripper = 1
+    data_stripper = 6000
     powertrain_id = 1
 
     # Traction control for beginning of race
@@ -40,30 +55,26 @@ def main():
     # add mass of each different pack type
     total_mass = bike_mass + motor_mass + mc_mass
 
+    max_accel = max_torque * gear_ratio / wheel_r / total_mass  # Some scaling factors definitely need to be added to this
+
     # Make m and b values for y=mx+b
     torque_slope = (max_torque - min_torque) / (max_rpm_max_torque - rpm_min_torque)
     torque_b = max_torque - (torque_slope * max_rpm_max_torque)
 
-    # back calculate to get rpm
-    # for now,
-    currentSpeed = 10
-    currentRPM = currentSpeed/(wheel_r * 2 * math.pi) * 60  # rotations per minute
+    t_to_a = 0.1
 
-    # making torque curve for specific powertrain setup
+    # define max torque
+    max_a = max_torque * t_to_a
+
+    # making torque curve for specific powertrain setup (this is only useful if you want to see how the curve looks)
     increment = 0.1
-    motorRPMs = np.arange(0, rpm_min_torque, (increment * data_stripper))
-    torques = np.zeros(len(motorRPMs))
-    for RPM in range(0, len(motorRPMs)):  # data stripper makes fewer datapoints
-        if RPM < max_rpm_max_torque / (increment * data_stripper):
-            # Flat slope for torque curve
-            print(RPM)
-            torques[RPM] = max_torque
-        else:
-            # Slope of torque curve
-            torques[RPM] = torque_slope * currentRPM + torque_b
 
-    plt.plot(motorRPMs, torques)
-    plt.ylabel("Torque (N)")
+    # the six pairs of points required to create the simplified torque curve
+    accels = np.array([t_to_a * max_torque, t_to_a * max_torque, t_to_a * min_torque])
+    motorRPMs = np.array([0, max_rpm_max_torque, rpm_min_torque])
+
+    plt.plot(motorRPMs, accels)
+    plt.ylabel("Accel (m/s^2)")
     plt.xlabel("Motor RPM")
     plt.show()
 
@@ -77,29 +88,50 @@ def main():
     # Calculate distance traveled.
     # If traveled enough distance, break.
 
-    # torque = torque wheel = torque shaft * 4
-    # f*r = torque
-    # torque / r = f
-    # f = m * a
-    # torque_shaft * 4 / r / m = a
+    timeIncrements = data_df.shape[0] / (increment * data_stripper)
+    dataSync = increment * data_stripper
 
-    max_accel = max_torque * gear_ratio / wheel_r / total_mass  # Some scaling factors definitely need to be added to this
-
-    segment_times = np.zeros(data_df.shape[0])
-
-    for i in range(0, data_df.shape[0]):
-        if i % 2 is 1:  # segments bike is braking
-            time = (2 * data_df['distances'][i]) / (data_df['final speed'][i] + data_df['final speed'][i - 1])
-            segment_times.put([i], time)
-        else:  # segments bike is accelerating
+    # make array of times
+    # find distance traveled over each time interval AND speed at end of time interval
+    # if distance is greater than or equal to distance for that segment, brake (braking is modeled as linear
+    # because we don't have a brake curve yet
+    segment_times = 0
+    i = 0
+    totalDistance = 0
+    # CONTINUE WHILE TOTAL DISTANCE HASN'T BEEN COVERED
+        # assume initial speed is zero
+        # any other initial speeds become data_df['final speed'][(i-1) / dataSync]
+        # this whole thing is weird because we have to use time to increment through each segment but using distance to
+        #   determine when to stop
+    while totalDistance < data_df['distances'].sum():
+        if (i / dataSync) % 2 is 1:  # segments bike is braking. Divided so i lines up with data_df
+            time = (2 * data_df['distances'][i / dataSync]) / (data_df['final speed'][i / dataSync] - data_df['final speed'][(i - 1) / dataSync])
+            segment_times = segment_times + time
+            totalDistance = totalDistance + data_df['distances'][i / dataSync]
+        elif (i / dataSync) % 2 is 1:  # segments bike is accelerating
             if i is 0:
-                det = 2 * max_accel * data_df['distances'][i]
-                time = math.sqrt(det) / max_accel
-                segment_times.put([i], time)
+                current_speed = 0
             else:
-                det = pow(data_df['final speed'][i - 1], 2) + 2 * max_accel * data_df['distances'][i]
-                time = (math.sqrt(det) - data_df['final speed'][i - 1]) / max_accel
-                segment_times.put([i], time)
+                current_speed = data_df['final speed'][(i - 1) / dataSync]
+                
+            segDistance = 0
+            while segDistance < data_df['distances'][i]:
+                this_accel = get_accel(current_speed)
+
+                det = 2 * get_accel(current_speed) * data_df['distances'][i]
+                time = math.sqrt(det) / this_accel
+
+                # time it takes to complete this segment
+                segment_times = segment_times + time
+
+                # add this interval's distance to the segment's distance
+                segDistance = segDistance + distance
+
+                # final speed of this segment
+                current_speed = time * this_accel
+            # add this segment's distance to the total distance
+            totalDistance = totalDistance + segDistance
+        i = i + data_stripper
 
     total_time = np.sum(segment_times)
 
