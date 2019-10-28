@@ -18,16 +18,14 @@ def main():
     # data_frame, max_torque, max_rpm_of_max_torque, max_rpm, mass, pack_capacity_kWh, data_stripper
 
     # create dataframes
-    locationkWhs = os.path.abspath('Component Inputs\\kWh.csv')
+    locationkWhs = os.path.abspath('Component Inputs\\pack.csv')
     locationMCs = os.path.abspath('Component Inputs\\motor controllers.csv')
     locationMotors = os.path.abspath('Component Inputs\\motors.csv')
 
-    datakWhs = pd.read_csv(locationkWhs, names=['kWh'], header=0,
-                           low_memory=False)
-    dataMCs = pd.read_csv(locationMCs, names=['MCmass'], header=0,
-                          low_memory=False)
-    dataMotors = pd.read_csv(locationMotors, names=['max torque', 'max rpm max torque', 'min torque', 'rpm min torque',
-                                                    'mass'], header=0, low_memory=False)
+    datakWhs = pd.read_csv(locationkWhs, names=['series', 'parallel', 'pack loss'], header=0, low_memory=False)
+    dataMCs = pd.read_csv(locationMCs, names=['MCmass', 'mc loss'], header=0, low_memory=False)
+    dataMotors = pd.read_csv(locationMotors, names=['max torque', 'max rpm max torque', 'rpm min torque',
+                                                    'mass', ' motor loss', 'rated power'], header=0, low_memory=False)
 
     df_kWhs = pd.DataFrame(datakWhs)
     df_MCs = pd.DataFrame(dataMCs)
@@ -47,10 +45,10 @@ def main():
     # initialize dataframe for every possible combination of components
     combinations_df = pd.DataFrame(columns=['motors', 'MCs', 'kWh'])
 
-    kWhData_df = pd.DataFrame(index=range(0, numperms), columns=['kWh'])
-    mcData_df = pd.DataFrame(index=range(0, numperms), columns=['MCmass'])
+    kWhData_df = pd.DataFrame(index=range(0, numperms), columns=['kWh', 'pack loss'])
+    mcData_df = pd.DataFrame(index=range(0, numperms), columns=['MCmass', 'mc loss'])
     motorData_df = pd.DataFrame(index=range(0, numperms), columns={'max torque', 'max rpm max torque', 'min torque',
-                                                                   'rpm min torque', 'mass'})
+                                                                   'rpm min torque', 'mass', 'motor loss'})
 
     # permute through combinations and add to data frame
     motorSeg = int(numperms / numMotors)
@@ -93,14 +91,32 @@ def main():
 
     bolt3_df = obike.main()  # call OriginalBikeModel.py
 
+    # instantiate arrays to fill with PowertrainSimulation.py output
     times = np.zeros(specs_df.shape[0])
+    ptrainIDs = np.zeros(specs_df.shape[0])
+    finish = np.zeros(specs_df.shape[0])
+    powerLoss = np.zeros(specs_df.shape[0])
 
-    inputStrip = input("Enter a value for data stripper > 0 or type 'n' to use default")
+    inputStrip = input("Enter a value for data stripper > 1 or type 'n' to use default")
     if inputStrip != 'n':
+        if inputStrip < '1':
+            inputStrip = 1
         data_stripper = inputStrip
+    else:
+        data_stripper = 1
 
+    # giveBattConfig = input("Enter 'y' to input your own number of series and parallel batteries. Enter 'n' to calculate every possible combination of series and parallel (this takes a long time)")
+    # if giveBattConfig != 'n':
+    parallel, series = input("Enter number of batteries in parallel and number of super cells in series.")
+    # else:
+    #    series = 0
+    #    parallel = 0
+
+    # returns time of completion, ID, and whether the pack config will allow it to finish the race
     for i in range(0, specs_df.shape[0]):
-        times[i] = psim.main(bolt3_df, specs_df.iloc[i], data_stripper, i)  # call PowertrainSimulation.py
+        times[i], ptrainIDs[i], finish[i], powerLoss[i] = psim.main(bolt3_df, specs_df.iloc[i], data_stripper, i, series, parallel)  # call PowertrainSimulation.py
 
 
-main()
+
+if __name__ == '__main__':
+    main()
