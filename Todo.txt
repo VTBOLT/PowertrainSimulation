@@ -26,4 +26,4 @@ This is a todo
 		* This could be used if a small segment of batteries could be added or lost to make the race viable
 2. create a wrapper script for the above python script
 	a. This wrapper script can simulate multiple powertrains
-	b. This script uses the simulated powertrains 
+	b. This scripts uses the simulated powertrains 
